@@ -22,7 +22,7 @@ while (true)    // 讓 server 一直跑處理多個連接
         Console.WriteLine("client 成功連接");
 
         // 4. 建立 HTTP 回應字串
-        string responeString = "HTTP/1.1 200 OK\r\n\r\n";
+        string responeString = @"HTTP/1.1 200 OK\r\n\r\n";
         byte[] responseBytes = Encoding.UTF8.GetBytes(responeString);
 
         // 5. 發送 HTTP 回應給client端

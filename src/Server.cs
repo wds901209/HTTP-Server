@@ -18,6 +18,7 @@ try
     {
         if (server.Pending())
         {
+            Console.WriteLine($"Time of accepting the socket: {DateTime.Now}");
             Task.Run(() => ProcessRequest());
         }
     }
@@ -37,8 +38,6 @@ void ProcessRequest()
 {
     // 等待來自客戶端的連線，這將會建立一個 socket 物件來代表此連線
     var socket = server.AcceptSocket(); // 三次握手過程完成後，客戶端連接成功
-
-    Console.WriteLine($"Time of accepting the socket: {DateTime.Now}");
 
     // 解析收到的 HTTP 請求
     var request = MyHttpRequest.ParseRequest(socket);

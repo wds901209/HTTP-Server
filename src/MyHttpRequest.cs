@@ -14,6 +14,8 @@ namespace codecrafters_http_server.src
         public string? Target { get; set; }
         public string? Version { get; set; }
 
+        public Dictionary<string, string>? Headers { get; set; }
+
         // 靜態方法，解析 socket 的 HTTP 請求
         public static MyHttpRequest? ParseRequest(Socket socket)
         {
@@ -26,10 +28,11 @@ namespace codecrafters_http_server.src
 
             // 回傳 MyHttpRequest 物件，把解析出來的資料設為對應屬性
             return new MyHttpRequest
-            {
+            {               
                 Method = requestParts.Method,
                 Target = requestParts.Target,
-                Version = requestParts.Version
+                Version = requestParts.Version,
+                Headers = GetHeaders(requestString)
             };
         }
 
@@ -62,10 +65,36 @@ namespace codecrafters_http_server.src
 
             var requestParts = requestLine.Split(' ');
 
-            // 回傳三部分：HTTP 方法、目標路徑、版本
+            // Request Line（請求行）格式是: <Method> <Target> <Version>   分別為：HTTP 方法、目標路徑、版本
             return (requestParts[0].Trim(),  
                     requestParts[1].Trim(),  // 預設目標為根路徑 "/"(index.html) 
                     requestParts[2].Trim()); 
+        }
+
+        private static Dictionary<string, string> GetHeaders(string requestString)
+        {
+            string strHeaders = requestString.Substring(requestString.IndexOf("Host"), requestString.IndexOf("\r\n\r\n") - requestString.IndexOf("Host"));
+
+            // 使用 "\r\n" 將 Headers 部分切割成多行
+            // 每行形如 "Key: Value" 的格式，例如：
+            // headers = [
+            //     "Host: localhost:4221",
+            //     "User-Agent: curl/8.9.1",
+            //     "Accept: */*"
+            // ];
+            string[] headers = strHeaders.Split("\r\n");
+
+            // 將每行解析成Key Value，並存入 Dictionary
+            Dictionary<string, string> dicHeaders = new Dictionary<string, string>();
+            foreach (string header in headers)
+            {
+                // 按 ":" 分割每一行，並去掉多餘的空格 (Trim)
+                // 例如："Host: localhost:4221" => key = "Host", value = "localhost:4221"
+                var keyValues = header.Split(':');
+                dicHeaders.Add(keyValues[0].Trim(), keyValues[1].Trim());
+            }
+
+            return dicHeaders;
         }
     }
 }

@@ -32,11 +32,23 @@ if (request != null)
     {
         responseString = "HTTP/1.1 200 OK\r\n\r\n";
     }
-    else if (request.Target?.ToLower().StartsWith("/echo/")?? false)
+    else if (request.Target?.ToLower().StartsWith("/echo/")?? false)    // Respond body
     {
         var target = request.Target;
         string content = target.Substring(6);
-        responseString = $"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: {content.Length}\r\n\r\n{content}";
+        responseString = $"HTTP/1.1 200 OK\r\n" +
+                         $"Content-Type: text/plain\r\n" +
+                         $"Content-Length: {content.Length}\r\n\r\n" +
+                         $"{content}";
+    }
+    else if (request.Target?.ToLower().StartsWith("/user-agent") ?? false)
+    {
+        // 取得 Header 中 "User-Agent" 的值，如果不存在就設為空字串
+        string userAgentValue = request.Headers?["User-Agent"] ?? "";
+        responseString = $"HTTP/1.1 200 OK\r\n" +
+                         $"Content-Type: text/plain\r\n" +
+                         $"Content-Length: {userAgentValue.Length}\r\n\r\n" +
+                         $"{userAgentValue}";
     }
     else
     {

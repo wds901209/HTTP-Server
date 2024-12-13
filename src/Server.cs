@@ -32,6 +32,12 @@ if (request != null)
     {
         responseString = "HTTP/1.1 200 OK\r\n\r\n";
     }
+    else if (request.Target?.ToLower().StartsWith("/echo/")?? false)
+    {
+        var target = request.Target;
+        string content = target.Substring(6);
+        responseString = $"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: {content.Length}\r\n\r\n{content}";
+    }
     else
     {
         responseString = "HTTP/1.1 404 Not Found\r\n\r\n";
@@ -41,7 +47,7 @@ else
 {
     responseString = "HTTP/1.1 404 Not Found\r\n\r\n";
 }
-Console.WriteLine($"Response: {responseString}");
+Console.WriteLine($"\r\nResponse: {responseString}");
 
 // 將回應字串轉換為 ASCII 編碼的位元組陣列
 Byte[] responseBytes = Encoding.ASCII.GetBytes(responseString);

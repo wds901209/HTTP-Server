@@ -28,7 +28,7 @@ string responseString;
 // 判斷請求的目標路徑 (Target)
 if (request != null)
 {
-    if (request.Target == "/")  // 如果請求的路徑是根目錄
+    if (request.Target == "/")  // 如果路徑是根目錄
     {
         responseString = "HTTP/1.1 200 OK\r\n\r\n";
     }

@@ -42,7 +42,7 @@ void ProcessRequest()
 
     // 解析收到的 HTTP 請求
     var request = MyHttpRequest.ParseRequest(socket);
-    // 如果請求有效，則印出相關的 HTTP 請求資訊
+    // 如果請求有效，印出相關的 HTTP 請求資訊
     if (request != null)
     {
         Console.WriteLine($"Http Method: {request.Method}");

@@ -14,7 +14,7 @@ namespace codecrafters_http_server.src
         public string? Target { get; set; }
         public string? Version { get; set; }
 
-        // 靜態方法，解析來自 socket 的 HTTP 請求
+        // 靜態方法，解析 socket 的 HTTP 請求
         public static MyHttpRequest? ParseRequest(Socket socket)
         {
             // 接收原始的請求資料

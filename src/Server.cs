@@ -1,35 +1,50 @@
-using System;
+using codecrafters_http_server.src;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
 
-// 你可以使用 Console.WriteLine 來進行調試
+// 顯示啟動訊息，當程式執行時，測試時可以查看此訊息
 Console.WriteLine("Logs from your program will appear here!");
 
-// 1. 定義 server 端監聽的 port number
-int port = 4221;
-TcpListener server = new TcpListener(IPAddress.Any, port);
-
-// 2. 啟動 server
+// 初始化 TcpListener，監聽所有網路介面卡 (IPAddress.Any) 的 4221 埠
+TcpListener server = new TcpListener(IPAddress.Any, 4221);
 server.Start();
-Console.WriteLine($"Server listening on port {port}");
 
-while (true)    // 讓 server 一直運行處理多個連接
+// 等待來自客戶端的連線，這將會建立一個 socket 物件來代表此連線
+var socket = server.AcceptSocket(); // 三次握手過程完成後，客戶端連接成功
+
+// 解析收到的 HTTP 請求
+var request = MyHttpRequest.ParseRequest(socket);
+// 如果請求有效，則印出相關的 HTTP 請求資訊
+if (request != null)
 {
-    // 3. 等待並接收 client 端連接
-    using (Socket socket = server.AcceptSocket())   // TCP 握手 (SYN-SYN+ACK-ACK)
+    Console.WriteLine($"Http Method: {request.Method}");
+    Console.WriteLine($"Http Target: {request.Target}");
+    Console.WriteLine($"Http Version: {request.Version}");
+}
+
+string responseString;
+
+// 判斷請求的目標路徑 (Target)
+if (request != null)
+{
+    if (request.Target == "/")  // 如果請求的路徑是根目錄
     {
-        Console.WriteLine("client 成功連接");
-
-        // 4. 建立 HTTP 回應字串
-        string responseString = @"HTTP/1.1 200 OK\r\n\r\n"; // 使用逐字字符串避免問題
-        byte[] responseBytes = Encoding.UTF8.GetBytes(responseString);
-
-        // 5. 發送 HTTP 回應給 client 端
-        socket.Send(responseBytes);
-        Console.WriteLine("已傳送 response");
-
-        // 6. 關閉 client 連線 (這裡只處理單一 request)
-        //socket.Close();
+        responseString = "HTTP/1.1 200 OK\r\n\r\n";
+    }
+    else
+    {
+        responseString = "HTTP/1.1 404 Not Found\r\n\r\n";
     }
 }
+else
+{
+    responseString = "HTTP/1.1 404 Not Found\r\n\r\n";
+}
+Console.WriteLine($"Response: {responseString}");
+
+// 將回應字串轉換為 ASCII 編碼的位元組陣列
+Byte[] responseBytes = Encoding.ASCII.GetBytes(responseString);
+
+// 將回應發送給客戶端
+socket.Send(responseBytes);

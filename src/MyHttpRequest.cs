@@ -15,6 +15,7 @@ namespace codecrafters_http_server.src
         public string? Version { get; set; }
 
         public Dictionary<string, string>? Headers { get; set; }
+        public string? Body {  get; set; }
 
         // 靜態方法，解析 socket 的 HTTP 請求
         public static MyHttpRequest? ParseRequest(Socket socket)
@@ -28,11 +29,12 @@ namespace codecrafters_http_server.src
 
             // 回傳 MyHttpRequest 物件，把解析出來的資料設為對應屬性
             return new MyHttpRequest
-            {               
+            {
                 Method = requestParts.Method,
                 Target = requestParts.Target,
                 Version = requestParts.Version,
-                Headers = GetHeaders(requestString)
+                Headers = GetHeaders(requestString),
+                Body = GetBody(requestString)
             };
         }
 
@@ -95,6 +97,11 @@ namespace codecrafters_http_server.src
             }
 
             return dicHeaders;
+        }
+
+        private static string GetBody(string requestString)
+        {
+            return requestString.Substring(requestString.IndexOf("\r\n\r\n") + 2).Trim();
         }
     }
 }

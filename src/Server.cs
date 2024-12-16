@@ -77,34 +77,39 @@ void ProcessRequest(Socket socket)
                              $"Content-Length: {userAgentValue.Length}\r\n\r\n" +
                              $"{userAgentValue}";
         }
-        else if (request.Target?.ToLower().StartsWith("/files/") ?? false)  // Return file
+        else if (request.Target?.ToLower().StartsWith("/files/") ?? false)  // 如果請求的目標是以 "/files/" 開頭，表示用戶想要獲取檔案
         {
             // 取得啟動程式時的命令列引數（例如 `--directory` 參數），
             // 這會回傳一個字串陣列，包含所有啟動時傳入的引數。
             // 例如，如果啟動程式時傳入的是 `--directory /tmp/`，
-            // 那麼 `arg` 的內容會是 ["--directory", "/tmp/"]
-            var argv = Environment.GetCommandLineArgs();            
-            string filePath = string.Empty;
+            // 那麼 argv 會是 ["program", "--directory", "/tmp/"]。
+            var argv = Environment.GetCommandLineArgs();
+            string filePath = string.Empty;  // 定義檔案路徑，初始值為空字串
 
-            if(argv != null)
+            // 找 --directory 的引數
+            if (argv != null)
             {
-                for(int i = 0; i < argv.Length; i++)
+                // 迭代每一個引數來尋找 --directory，並將相對應的路徑賦值給 filePath
+                for (int i = 0; i < argv.Length; i++)
                 {
-                    if(i > 0 && argv[i-1] == "--directory")
+                    // 如果當前引數是 --directory，則將下一個引數作為檔案路徑
+                    if (i > 0 && argv[i - 1] == "--directory")
                     {
-                        filePath = argv[i];
-                        break;
+                        filePath = argv[i];  // 取得檔案目錄路徑
+                        break; 
                     }
-                    
                 }
             }
 
-            var fileName = $"{filePath}{request.Target.Substring(1)}";
+            // 構建完整的檔案路徑，將 --directory 指定的路徑和請求的檔案名稱結合
+            // request.Target.Substring(7) 是因為我們需要去除 "/files/" 這個部分
+            var fileName = $"{filePath}{request.Target.Substring(7)}";
 
-            Console.WriteLine($"File path: {filePath}{request.Target.Substring(1)}");
+            Console.WriteLine($"File path: {fileName}");
 
             if (File.Exists(fileName))
             {
+                // 如果檔案存在，把檔案內容轉成string
                 var content = File.ReadAllText(fileName);
 
                 responseString = $"HTTP/1.1 200 OK\r\nContent-Type: application/octet-stream\r\nContent-Length: {content.Length}\r\n\r\n{content}";

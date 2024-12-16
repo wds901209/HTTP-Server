@@ -18,8 +18,12 @@ try
     {
         if (server.Pending())
         {
+            // 等待來自客戶端的連線，這將會建立一個 socket 物件來代表此連線
+            var socket = server.AcceptSocket(); // 三次握手過程完成後，客戶端連接成功
+
             Console.WriteLine($"Time of accepting the socket: {DateTime.Now}");
-            Task.Run(() => ProcessRequest());
+
+            Task.Run(() => ProcessRequest(socket));
         }
     }
 }
@@ -34,11 +38,8 @@ finally
 
 
 
-void ProcessRequest()
+void ProcessRequest(Socket socket)
 {
-    // 等待來自客戶端的連線，這將會建立一個 socket 物件來代表此連線
-    var socket = server.AcceptSocket(); // 三次握手過程完成後，客戶端連接成功
-
     // 解析收到的 HTTP 請求
     var request = MyHttpRequest.ParseRequest(socket);
     // 如果請求有效，印出相關的 HTTP 請求資訊
@@ -49,7 +50,7 @@ void ProcessRequest()
         Console.WriteLine($"Http Version: {request.Version}");
     }
 
-    string responseString;
+    string responseString = "";
 
     // 判斷請求的目標路徑 (Target)
     if (request != null)
@@ -75,6 +76,43 @@ void ProcessRequest()
                              $"Content-Type: text/plain\r\n" +
                              $"Content-Length: {userAgentValue.Length}\r\n\r\n" +
                              $"{userAgentValue}";
+        }
+        else if (request.Target?.ToLower().StartsWith("/files/") ?? false)  // Return file
+        {
+            // 取得啟動程式時的命令列引數（例如 `--directory` 參數），
+            // 這會回傳一個字串陣列，包含所有啟動時傳入的引數。
+            // 例如，如果啟動程式時傳入的是 `--directory /tmp/`，
+            // 那麼 `arg` 的內容會是 ["--directory", "/tmp/"]
+            var argv = Environment.GetCommandLineArgs();            
+            string filePath = string.Empty;
+
+            if(argv != null)
+            {
+                for(int i = 0; i < argv.Length; i++)
+                {
+                    if(i > 0 && argv[i-1] == "--directory")
+                    {
+                        filePath = argv[i];
+                        break;
+                    }
+                    
+                }
+            }
+
+            var fileName = $"{filePath}{request.Target.Substring(1)}";
+
+            Console.WriteLine($"File path: {filePath}{request.Target.Substring(1)}");
+
+            if (File.Exists(fileName))
+            {
+                var content = File.ReadAllText(fileName);
+
+                responseString = $"HTTP/1.1 200 OK\r\nContent-Type: application/octet-stream\r\nContent-Length: {content.Length}\r\n\r\n{content}";
+            }
+            else
+            {
+                responseString = "HTTP/1.1 404 Not Found\r\n\r\n";
+            }
         }
         else
         {
